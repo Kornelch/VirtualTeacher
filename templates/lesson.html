@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lekcja - Wirtualny Nauczyciel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+        }
+        /* Powiększony kontener */
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 800px; /* Zwiększono szerokość */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out;
+            max-height: 95vh;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #2c3e50; text-align: center; }
+        #teacher-face { text-align: center; margin-bottom: 20px; }
+        #eyes-gif { width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid #74ebd5; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); transition: border-color 0.3s; }
+        #chat-output {
+            flex-grow: 1;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            max-height: 55vh;
+            border: 1px solid #e0e6ed;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-wrapper { display: flex; margin-bottom: 15px; }
+        .message-wrapper.user { justify-content: flex-end; }
+        .message-wrapper.teacher { justify-content: flex-start; }
+        .message-box { max-width: 85%; padding: 12px 18px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
+        .message-box.teacher { background-color: #e6f7ff; color: #2c3e50; border-bottom-left-radius: 2px; }
+        .message-box.user { background-color: #d1f7d1; color: #34495e; border-bottom-right-radius: 2px; }
+        .message-box p { margin: 0; font-size: 15px; }
+        .message-img { max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; margin-bottom: 5px; }
+
+        /* Formatowanie kodu */
+        .code-block { background-color: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; font-size: 14px; overflow-x: auto; margin: 10px 0; }
+        .inline-code { background-color: #f1f2f6; color: #e74c3c; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; border: 1px solid #dfe4ea; }
+
+        .input-area { display: flex; gap: 10px; margin-top: 10px; align-items: flex-end; }
+
+        /* Wielolinijkowe pole tekstowe */
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            outline: none;
+            background-color: #f8fafc;
+            transition: border-color 0.3s;
+            resize: vertical;
+            min-height: 80px; /* Wysokość na ok. 3 linijki */
+            max-height: 150px;
+        }
+        #user-input:focus { border-color: #9face6; }
+
+        .btn { padding: 12px 20px; font-size: 15px; font-weight: 600; color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; height: 50px; white-space: nowrap; }
+        .btn-send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-mic { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .btn:hover { transform: translateY(-2px); }
+        .test-options { margin-top: 15px; margin-bottom: 5px; }
+        .test-options button { display: block; width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid #e0e6ed; border-radius: 8px; background-color: #f8fafc; text-align: left; cursor: pointer; transition: background-color 0.2s; font-family: 'Poppins', sans-serif; font-size: 14px; }
+        .test-options button:hover:not(:disabled) { background-color: #e6f7ff; border-color: #9face6; }
+        .test-options button.selected { background-color: #d1f7d1; border-color: #38ef7d; font-weight: 600; }
+        .test-options button:disabled { cursor: not-allowed; opacity: 0.8; }
+        .back-link { display: block; text-align: center; margin-top: 25px; font-size: 14px; color: #95a5a6; text-decoration: none; }
+        .btn-mic.listening { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important; animation: pulseRed 1s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>A Lesson with the AI Teacher</h1>
+
+        <div id="teacher-face">
+            <img id="eyes-gif" src="/static/normal_eyes.gif" alt="Oczy Nauczyciela">
+        </div>
+
+        <div id="chat-output">
+            <div class="message-wrapper teacher">
+                <div class="message-box teacher">
+                    <p><b>Teacher:</b> Hello! I'm getting ready for class...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="user-input" rows="3" placeholder="Type your answer (Enter to submit, Shift+Enter for a new line)..." autocomplete="off"></textarea>
+            <button id="mic-btn" class="btn btn-mic" onclick="startDictation()">🎤 Say</button>
+            <button id="send-btn" class="btn btn-send" onclick="sendMessage()">Send</button>
+        </div>
+
+        <a href="/" class="back-link">⬅ Return to the lesson selection</a>
+    </div>
+
+    <script>
+        const threadId = "{{ thread_id }}";
+        const assistantId = "{{ assistant_id }}";
+        const chatOutput = document.getElementById('chat-output');
+        const userInput = document.getElementById('user-input');
+        const eyesGif = document.getElementById('eyes-gif');
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatOutput.scrollTo({ top: chatOutput.scrollHeight, behavior: 'smooth' });
+            }, 50);
+        }
+
+        function createChatBubble(htmlContent, isTeacher = true) {
+            if (!htmlContent || htmlContent.trim() === "") return;
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper ${isTeacher ? 'teacher' : 'user'}`;
+            const box = document.createElement('div');
+            box.className = `message-box ${isTeacher ? 'teacher' : 'user'}`;
+            const prefix = isTeacher ? '<b>Teacher:</b> ' : '<b>You:</b> ';
+            box.innerHTML = `<p>${prefix}${htmlContent}</p>`;
+            wrapper.appendChild(box);
+            chatOutput.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        let availableVoices = [];
+        function loadVoices() { availableVoices = window.speechSynthesis.getVoices(); }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = loadVoices; }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
+                if (englishVoice) { utterance.voice = englishVoice; }
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        let recognition;
+        function startDictation() {
+            if (window.hasOwnProperty('webkitSpeechRecognition')) {
+                if (recognition && (recognition.continuous || recognition.state === 'listening')) {
+                    recognition.stop();
+                    document.getElementById('mic-btn').textContent = "🎤 Mów";
+                    document.getElementById('mic-btn').classList.remove('listening');
+                    return;
+                }
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = "en-US";
+                recognition.start();
+
+                document.getElementById('mic-btn').textContent = "🔴 Słucham...";
+                document.getElementById('mic-btn').classList.add('listening');
+
+                recognition.onresult = function(e) {
+                    userInput.value = e.results[0][0].transcript;
+                    recognition.stop();
+                    document.getElementById('mic-btn').textContent = "🎤 Mów";
+                    document.getElementById('mic-btn').classList.remove('listening');
+                    sendMessage();
+                };
+                recognition.onerror = function(e) {
+                    recognition.stop();
+                    document.getElementById('mic-btn').textContent = "🎤 Mów";
+                    document.getElementById('mic-btn').classList.remove('listening');
+                };
+            }
+        }
+
+        // Obsługa klawisza Enter w polu Textarea
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Zapobiega dodaniu nowej linii
+                sendMessage();
+            }
+        });
+
+        async function sendMessage(messageToSend = null) {
+            const message = messageToSend || userInput.value.trim();
+            if (!message) return;
+
+            // Jeśli to nie jest wiadomość systemowa na start, pokaż ją na ekranie
+            if (message !== "Start the lesson please.") {
+                createChatBubble(message.replace(/\n/g, '<br>'), false);
+            }
+            userInput.value = "";
+            scrollToBottom();
+            eyesGif.src = "/static/thinking_eyes.gif";
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ thread_id: threadId, assistant_id: assistantId, message: message })
+                });
+                const data = await response.json();
+
+                if (data.response) {
+                    parseAndDisplay(data.response);
+                } else if (data.error) {
+                    createChatBubble(`<span style="color:red;">Error: ${data.error}</span>`, true);
+                    eyesGif.src = "/static/sad_eyes.gif";
+                }
+            } catch (error) {
+                createChatBubble(`<span style="color:red;">Connection error.</span>`, true);
+                eyesGif.src = "/static/sad_eyes.gif";
+            }
+        }
+
+                function parseAndDisplay(text) {
+            let processedText = text;
+            let currentGif = "normal";
+
+            // 1. Tagi GIF
+            const moodMatch = processedText.match(/\[MOOD:(.*?)\]/i);
+            if (moodMatch) {
+                currentGif = moodMatch[1].toLowerCase();
+                processedText = processedText.replace(moodMatch[0], '');
+            }
+            eyesGif.src = `/static/${currentGif}_eyes.gif`;
+
+            let htmlContent = processedText;
+            let testQuestionToSpeak = "";
+
+            // 2. BARDZO ODPORNE Wyciąganie testów [TEST]...[/TEST]
+            const testBlockRegex = /\[TEST\]([\s\S]*?)\[\/TEST\]/i;
+            const testMatch = htmlContent.match(testBlockRegex);
+
+            if (testMatch) {
+                let testContent = testMatch[1];
+
+                // Zamiana fikuśnych cudzysłowów na standardowe, żeby ułatwić wyszukiwanie
+                let normalized = testContent.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+
+                // Szukamy pytania (wszystko pomiędzy "question": a ,"options")
+                const qMatch = normalized.match(/"question"\s*:\s*["']?([\s\S]*?)["']?\s*,\s*"options"/i);
+                // Szukamy opcji (wszystko w nawiasach kwadratowych po "options":)
+                const oMatch = normalized.match(/"options"\s*:\s*\[([\s\S]*?)\]/i);
+
+                if (qMatch && oMatch) {
+                    const testQuestion = qMatch[1].trim();
+                    testQuestionToSpeak = testQuestion;
+
+                    let optionsString = oMatch[1];
+                    let testOptions = [];
+                    // Wyciąganie pojedynczych opcji spomiędzy cudzysłowów
+                    const optRegex = /["']([\s\S]*?)["']/g;
+                    let optMatch;
+                    while ((optMatch = optRegex.exec(optionsString)) !== null) {
+                        if (optMatch[1].trim() !== "") testOptions.push(optMatch[1].trim());
+                    }
+
+                    // Szukanie kodu wewnątrz bloku TEST
+                    let codeInsideTest = "";
+                    const codeMatch = testContent.match(/```[\s\S]*?```/);
+                    if (codeMatch) { codeInsideTest = codeMatch[0]; }
+
+                    // Budowanie widoku pytania
+                    let questionHtml = testQuestion;
+                    if (codeInsideTest) {
+                        const formattedCode = codeInsideTest.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, lang, code) {
+                            return `<pre class="code-block"><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                        });
+                        questionHtml += `<br>${formattedCode}`;
+                    }
+                    createChatBubble(questionHtml, true);
+
+                    // Budowanie przycisków
+                    const optionsWrapper = document.createElement('div');
+                    optionsWrapper.className = 'message-wrapper teacher';
+                    const optionsBox = document.createElement('div');
+                    optionsBox.className = 'message-box teacher';
+                    optionsBox.innerHTML = `<div class="test-options"></div>`;
+                    optionsWrapper.appendChild(optionsBox);
+                    chatOutput.appendChild(optionsWrapper);
+
+                    const optionsContainer = optionsBox.querySelector('.test-options');
+                    testOptions.forEach((option) => {
+                        const optionBtn = document.createElement('button');
+                        optionBtn.textContent = option;
+                        optionBtn.onclick = () => selectAnswer(optionBtn, option);
+                        optionsContainer.appendChild(optionBtn);
+                    });
+                } else {
+                    // Jeśli agent całkowicie zepsuł formatowanie, wyświetl surowy tekst z kodem jako zabezpieczenie
+                    createChatBubble("<b>Test:</b><br>" + testContent.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>'), true);
+                }
+
+                // Usuwamy blok testu z głównego tekstu
+                htmlContent = htmlContent.replace(testMatch[0], '');
+            }
+
+            // 3. Obrazki
+            const imgRegex = /\[IMG\](.*?)\[\/IMG\]/gi;
+            htmlContent = htmlContent.replace(imgRegex, '<br><img src="$1" class="message-img" alt="Ilustracja"><br>');
+
+            // 4. Formatowanie reszty kodu
+            htmlContent = htmlContent.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, lang, code) {
+                return `<pre class="code-block"><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+            });
+            htmlContent = htmlContent.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+            let textToSpeak = htmlContent.replace(/<pre class="code-block">[\s\S]*?<\/pre>/g, ' [Example code on screen] ');
+
+            // 5. Usuwanie znaczników systemowych
+            const systemTagsRegex = /\[[A-Z_]+(:[^\]]+)?\]/g;
+            htmlContent = htmlContent.replace(systemTagsRegex, '');
+            textToSpeak = textToSpeak.replace(systemTagsRegex, '');
+
+            // 6. Dzielenie na dymki
+            const paragraphs = htmlContent.split(/\n\s*\n/);
+            paragraphs.forEach(paragraph => {
+                if (paragraph.trim() !== "") {
+                    createChatBubble(paragraph.replace(/\n/g, '<br>'), true);
+                }
+            });
+
+            // 7. Czytanie
+            if (testQuestionToSpeak !== "") {
+                speakText(testQuestionToSpeak);
+            } else if (textToSpeak.trim() !== "") {
+                speakText(textToSpeak.replace(/<[^>]*>?/gm, ''));
+            }
+        }
+
+
+        // Automatyczne uruchomienie po załadowaniu
+        window.onload = function() {
+            sendMessage("Start the lesson please.");
+        };
+    </script>
+</body>
+</html>

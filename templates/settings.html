@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ustawienia - Wirtualny Nauczyciel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        p.subtitle {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            outline: none;
+            background-color: #f8fafc;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #74ebd5;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Poppins', sans-serif;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.4);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #95a5a6;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #34495e;
+        }
+
+        .agents-list {
+            list-style: none;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .agents-list li {
+            background-color: #f1f2f6;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .agent-id-badge {
+            font-size: 11px;
+            background-color: #dfe4ea;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: #57606f;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>⚙️ Settings</h1>
+        <p class="subtitle">Set up your connection with OpenAI and add teachers.</p>
+
+        <form action="/settings" method="POST">
+            <!-- Sekcja API -->
+            <div class="section-title">OpenAI API key</div>
+            <div class="form-group">
+                <label for="api_key">Your key (sk-....)</label>
+                <input type="password" id="api_key" name="api_key" value="{{ config.openai_api_key }}" placeholder="Wprowadź klucz API" required>
+            </div>
+
+            <!-- Sekcja Listy Agentów -->
+            <div class="section-title">Registered Teachers</div>
+            {% if config.agents %}
+                <ul class="agents-list">
+                    {% for agent in config.agents %}
+                        <li>
+                            <span>{{ agent.name }}</span>
+                            <span class="agent-id-badge">{{ agent.id }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">Brak dodanych nauczycieli.</p>
+            {% endif %}
+
+            <!-- Sekcja Dodawania Agenta -->
+            <div class="section-title">Add a New Teacher</div>
+            <div class="form-group">
+                <label for="agent_name">Name (e.g., Python Teacher)</label>
+                <input type="text" id="agent_name" name="agent_name" placeholder="Enter a name">
+            </div>
+            <div class="form-group">
+                <label for="agent_id">OpenAI Assistant ID (asst_...)</label>
+                <input type="text" id="agent_id" name="agent_id" placeholder="Enter the assistant's ID">
+            </div>
+
+            <button type="submit" class="btn-save">Save settings 💾</button>
+        </form>
+
+        <a href="/" class="back-link">⬅ Return to the home page</a>
+    </div>
+
+</body>
+</html>
