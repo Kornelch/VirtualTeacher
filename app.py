@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import openai
 import json
-import os
+import os 
 
 app = Flask(__name__)
 CONFIG_FILE = 'config.json'
